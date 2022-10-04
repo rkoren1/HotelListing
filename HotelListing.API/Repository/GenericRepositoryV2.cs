@@ -64,9 +64,9 @@ namespace HotelListing.API.Repository
         {
             _context.SaveChanges();
         }
-        private void CommitTransactionAsync()
+        private Task<int> CommitTransactionAsync()
         {
-            _context.SaveChangesAsync();
+           return _context.SaveChangesAsync();
         }
 
         /// Updates existing entity and save (U)
@@ -76,10 +76,10 @@ namespace HotelListing.API.Repository
             CommitTransaction();
         }
 
-        public void UpdateAsync<T>(T entity) where T : class
+        public Task<int> UpdateAsync<T>(T entity) where T : class
         {
             UpdateWithoutSave(entity);
-            CommitTransactionAsync();
+           return CommitTransactionAsync();
         }
 
         /// Updates list of entitites and saves (U)

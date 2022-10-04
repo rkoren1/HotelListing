@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using HotelListing.API.Data;
 using HotelListing.API.Contracts;
@@ -17,12 +12,10 @@ namespace HotelListing.API.Controllers
     public class HotelsController : ControllerBase
     {
         private readonly IGenericRepositoryV2 _genericRepositoryV2;
-        private readonly IHotelsRepository _hotelsRepository;
         private readonly IMapper _mapper;
 
-        public HotelsController( IHotelsRepository hotelsRepository, IMapper mapper, IGenericRepositoryV2 genericRepositoryV2)
+        public HotelsController(IMapper mapper, IGenericRepositoryV2 genericRepositoryV2)
         {
-            this._hotelsRepository = hotelsRepository;
             this._mapper = mapper;
             this._genericRepositoryV2 = genericRepositoryV2;
         }
@@ -31,7 +24,7 @@ namespace HotelListing.API.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<HotelDto>>> GetHotels()
         {
-            var hotels = await _genericRepositoryV2.GetAllAsync<HotelDto>();
+            var hotels = await _genericRepositoryV2.GetAllAsync<Hotel>();
             return Ok(_mapper.Map<List<HotelDto>>(hotels));
         }
 
@@ -71,7 +64,7 @@ namespace HotelListing.API.Controllers
 
             try
             {
-                await _hotelsRepository.UpdateAsync(hotel);
+                await _genericRepositoryV2.UpdateAsync(hotel);
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -103,21 +96,27 @@ namespace HotelListing.API.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteHotel(int id)
         {
-            var hotel = await _hotelsRepository.GetAsync(id);
+            var hotel = await _genericRepositoryV2.GetByIdAsync<Hotel>(id);
 
             if (hotel == null)
             {
                 return NotFound();
             }
 
-            await _hotelsRepository.DeleteAsync(id);
+            _genericRepositoryV2.Remove<Hotel>(hotel);
 
             return NoContent();
         }
 
         private async Task<bool> HotelExists(int id)
         {
-            return await _hotelsRepository.Exists(id);
+            var hotel = await _genericRepositoryV2.GetByIdAsync<Hotel>(id);
+
+            if (hotel == null)
+            {
+                return false;
+            }
+        return true;
         }
     }
 }
