@@ -46,37 +46,21 @@ namespace HotelListing.API.Controllers
         // PUT: api/Hotels/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutHotel(int id, HotelDto hotelDto)
+        public async Task<IActionResult> PutHotel(int id, BaseHotelDto hotelDto)
         {
-            if (id != hotelDto.Id)
-            {
-                return BadRequest();
-            }
-
-            var hotel = await _genericRepositoryV2.GetByIdAsync<Hotel>(id);
-
-            if (hotel == null)
+            if(!HotelExists(id))
             {
                 return NotFound();
             }
-
-            _mapper.Map(hotelDto, hotel);
-
-            try
+            var hotel = new Hotel()
             {
-                await _genericRepositoryV2.UpdateAsync(hotel);
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!await HotelExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+                Id = id,
+                Rating = hotelDto.Rating,
+                Address = hotelDto.Address,
+                Name = hotelDto.Name,
+                CountryId = hotelDto.CountryId,
+            };
+            await _genericRepositoryV2.UpdateAsync<Hotel>(hotel);
 
             return NoContent();
         }
@@ -86,10 +70,19 @@ namespace HotelListing.API.Controllers
         [HttpPost]
         public async Task<ActionResult<Hotel>> PostHotel(CreateHotelDto hotelDto)
         {
-            var hotel = _mapper.Map<Hotel>(hotelDto);
+            var hotel = new Hotel()
+            {
+                Rating = hotelDto.Rating,
+                Name = hotelDto.Name,
+                Address = hotelDto.Address,
+                CountryId = hotelDto.CountryId,
+            };
             await _genericRepositoryV2.AddAsync<Hotel>(hotel);
 
-            return CreatedAtAction("GetHotel", new { id = hotel.Id }, hotel);
+            await _genericRepositoryV2.CommitTransactionAsync();
+
+
+            return Ok(hotel);
         }
 
         // DELETE: api/Hotels/5
@@ -105,12 +98,14 @@ namespace HotelListing.API.Controllers
 
             _genericRepositoryV2.Remove<Hotel>(hotel);
 
+            await _genericRepositoryV2.CommitTransactionAsync();
+
             return NoContent();
         }
 
-        private async Task<bool> HotelExists(int id)
+        private bool HotelExists(int id)
         {
-            var hotel = await _genericRepositoryV2.GetByIdAsync<Hotel>(id);
+            var hotel =  _genericRepositoryV2.GetById<Hotel>(id);
 
             if (hotel == null)
             {

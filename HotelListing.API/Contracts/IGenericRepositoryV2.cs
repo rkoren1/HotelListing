@@ -20,5 +20,6 @@ namespace HotelListing.API.Contracts
         public void UpdateListAsync<T>(IEnumerable<T> entityList) where T : class;
         void Update<T>(T entity) where T : class;
         public Task<int> UpdateAsync<T>(T entity) where T : class;
+        public Task<int> CommitTransactionAsync();
     }
 }

@@ -10,7 +10,7 @@ namespace HotelListing.API.Models.Hotels
         [Required]
         public string Address { get; set; }
 
-        public double? Rating { get; set; }
+        public double Rating { get; set; }
 
         [Required]
         [Range(1,int.MaxValue)]

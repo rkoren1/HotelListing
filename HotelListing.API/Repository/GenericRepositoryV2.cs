@@ -64,7 +64,7 @@ namespace HotelListing.API.Repository
         {
             _context.SaveChanges();
         }
-        private Task<int> CommitTransactionAsync()
+        public Task<int> CommitTransactionAsync()
         {
            return _context.SaveChangesAsync();
         }
